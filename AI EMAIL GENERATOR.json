@@ -1,0 +1,198 @@
+{
+  "name": "AI EMAIL GENERATOR",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Email Generator",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Recipient Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Enter the Email Topic / Details",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d61899d-c142-4888-8831-de269b6a3f18",
+      "name": "On form submission",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -288,
+        -144
+      ],
+      "webhookId": "2ac8adee-fbd4-4820-9d00-5479e30de297"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Write a professional email based on the following topic:\nTopic: {{ $json[\"Enter the Email Topic / Details\"] }}\n\nCRITICAL INSTRUCTIONS:\n- Do NOT use bracketed placeholders like [Recipient's Name], [Your Name], or [Your Position].\n- Use generic professional greetings like \"Hello,\" or \"Dear Team,\".\n- Sign off cleanly with \"Best regards,\" followed by no placeholders."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "91c3e41a-7a2d-48fd-b15d-a6f1cea38fc2",
+      "name": "Message a model",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        16,
+        -128
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "BLIKxkr193qXEFpK",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "folderId": "default",
+        "title": "={{ $json.output[0].content[0].type }}"
+      },
+      "id": "31704836-ba78-415d-b1f9-e62ac6759a69",
+      "name": "Create a document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -160
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "NfMxK2dXrJx6ZtRS",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Message a model').item.json.output[0].content[0].text }}"
+            }
+          ]
+        }
+      },
+      "id": "251e2fa2-0bc6-4464-ba2e-a4bda0456f77",
+      "name": "Update a document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -160
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "NfMxK2dXrJx6ZtRS",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['Recipient Email'] }}",
+        "subject": "UPDATES ON FORM",
+        "message": "=={{ $('Message a model').item.json.output[0].content[0].text.replace(/\\n/g, '<br>') }}",
+        "options": {}
+      },
+      "id": "0b2bdaee-1b4f-4e52-9820-90abe03827ad",
+      "name": "Send a message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        -160
+      ],
+      "webhookId": "23dee624-eab4-447b-9967-a83ffae4e21a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "P1S1KlPqTcTR2TOf",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "94d25cd9-6124-466a-aa9f-1d1bfeb80b06",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2f5638bad141a2b3032ff4af83340fd3785b784e6cddad47a6d7693c5e56e94"
+  },
+  "nodeGroups": [],
+  "id": "JOMaBP85v2ll2SjU",
+  "tags": []
+}
